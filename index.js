@@ -28,7 +28,7 @@ const port = 3000;
 // Middleware
 app.use(cors());
 app.use(session({ 
-    secret: 'Your_Secret_Key', 
+    secret: 'This is very secret ', 
     resave: true, 
     saveUninitialized: true
 }));
