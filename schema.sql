@@ -1,4 +1,4 @@
- -- Create Tables
+DROP TABLE IF EXISTS magazines;
 CREATE TABLE magazines (
     magazine_id SERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
@@ -9,6 +9,7 @@ CREATE TABLE magazines (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS issues;
 CREATE TABLE issues (
     issue_id SERIAL PRIMARY KEY,
     magazine_id INTEGER REFERENCES magazines(magazine_id) ON DELETE CASCADE,
@@ -19,6 +20,7 @@ CREATE TABLE issues (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS articles;
 CREATE TABLE articles (
     article_id SERIAL PRIMARY KEY,
     issue_id INTEGER REFERENCES issues(issue_id) ON DELETE CASCADE,
@@ -30,6 +32,7 @@ CREATE TABLE articles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
@@ -39,6 +42,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (
     subscription_id SERIAL PRIMARY KEY,
     magazine_id INTEGER REFERENCES magazines(magazine_id) ON DELETE CASCADE,
@@ -49,40 +53,3 @@ CREATE TABLE subscriptions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(magazine_id, user_id)
 );
-
--- Create Triggers with direct statements
-
--- 1. Update timestamp triggers
-CREATE TRIGGER update_magazines_timestamp 
-    BEFORE UPDATE ON magazines BEGIN
-    UPDATE magazines SET updated_at = CURRENT_TIMESTAMP 
-    WHERE magazine_id = NEW.magazine_id;
-END;
-
-CREATE TRIGGER update_articles_timestamp
-    BEFORE UPDATE ON articles BEGIN
-    UPDATE articles SET updated_at = CURRENT_TIMESTAMP 
-    WHERE article_id = NEW.article_id;
-END;
-
--- 2. Subscription validation trigger
-CREATE TRIGGER check_subscription_dates
-    BEFORE INSERT ON subscriptions
-    WHEN NEW.end_date <= NEW.start_date BEGIN
-    SELECT RAISE(ROLLBACK, 'End date must be after start date');
-END;
-
--- 3. Auto-update issue status trigger
-CREATE TRIGGER auto_publish_issue
-    BEFORE INSERT ON issues
-    WHEN NEW.publication_date <= CURRENT_DATE BEGIN
-    UPDATE issues SET status = 'published' 
-    WHERE issue_id = NEW.issue_id;
-END;
-
--- 4. Prevent deletion of published articles trigger
-CREATE TRIGGER no_delete_published_articles
-    BEFORE DELETE ON articles
-    WHEN OLD.status = 'published' BEGIN
-    SELECT RAISE(ROLLBACK, 'Cannot delete published articles');
-END;
