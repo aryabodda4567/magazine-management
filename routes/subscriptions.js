@@ -13,18 +13,35 @@ router.post('/', async (req, res) => {
     const { magazine_id, user_id, start_date, end_date, status } = req.body;
 
     try {
+        // Validate magazine_id exists
+        const [magazineCheck] = await pool.query('SELECT * FROM magazines WHERE magazine_id = ?', [magazine_id]);
+        if (magazineCheck.length === 0) {
+            return res.status(400).send('Magazine not found');
+        }
+
+        // Validate user_id exists
+        const [userCheck] = await pool.query('SELECT * FROM users WHERE user_id = ?', [user_id]);
+        if (userCheck.length === 0) {
+            return res.status(400).send('User not found');
+        }
+
+        // Ensure unique subscription (magazine_id + user_id)
+        const [subscriptionCheck] = await pool.query(
+            'SELECT * FROM subscriptions WHERE magazine_id = ? AND user_id = ?', 
+            [magazine_id, user_id]
+        );
+        if (subscriptionCheck.length > 0) {
+            return res.status(400).send('User already subscribed to this magazine');
+        }
+
         const [result] = await pool.query(
-            'INSERT INTO subscriptions (magazine_id, user_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)',
-            [magazine_id, user_id, start_date, end_date, status || 'active']
+            'INSERT INTO subscriptions (magazine_id, user_id, start_date, end_date, status) VALUES (?, ?, ?, ?, ?)', 
+            [magazine_id, user_id, start_date, end_date, status]
         );
         res.status(201).json({ message: 'Subscription created successfully', subscription_id: result.insertId });
     } catch (error) {
         console.error('Error creating subscription:', error);
-        if (error.code === 'ER_DUP_ENTRY') {
-            res.status(400).send('Subscription already exists for this magazine and user');
-        } else {
-            res.status(500).send('Internal Server Error');
-        }
+        res.status(500).send('Internal Server Error');
     }
 });
 

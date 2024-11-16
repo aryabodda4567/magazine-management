@@ -14,19 +14,16 @@ router.post('/', async (req, res) => {
 
     try {
         const [result] = await pool.query(
-            'INSERT INTO users (full_name, email, role, password_hash) VALUES (?, ?, ?, ?)',
-            [full_name, email, role || 'writer', password_hash]
+            'INSERT INTO users (full_name, email, role, password_hash) VALUES (?, ?, ?, ?)', 
+            [full_name, email, role, password_hash]
         );
         res.status(201).json({ message: 'User created successfully', user_id: result.insertId });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            res.status(400).send('Email already exists');
-        } else {
-            console.error('Error creating user:', error);
-            res.status(500).send('Internal Server Error');
-        }
+        console.error('Error creating user:', error);
+        res.status(500).send('Internal Server Error');
     }
 });
+
 
 // Get all users (max 40)
 router.get('/', async (req, res) => {

@@ -13,9 +13,21 @@ router.post('/', async (req, res) => {
     const { issue_id, title, content, author_id, status } = req.body;
 
     try {
+        // Validate issue_id exists
+        const [issueCheck] = await pool.query('SELECT * FROM issues WHERE issue_id = ?', [issue_id]);
+        if (issueCheck.length === 0) {
+            return res.status(400).send('Issue not found');
+        }
+
+        // Validate author_id exists (optional, based on your requirement)
+        const [userCheck] = await pool.query('SELECT * FROM users WHERE user_id = ?', [author_id]);
+        if (author_id && userCheck.length === 0) {
+            return res.status(400).send('Author not found');
+        }
+
         const [result] = await pool.query(
-            'INSERT INTO articles (issue_id, title, content, author_id, status) VALUES (?, ?, ?, ?, ?)',
-            [issue_id, title, content, author_id, status || 'draft']
+            'INSERT INTO articles (issue_id, title, content, author_id, status) VALUES (?, ?, ?, ?, ?)', 
+            [issue_id, title, content, author_id, status]
         );
         res.status(201).json({ message: 'Article created successfully', article_id: result.insertId });
     } catch (error) {
@@ -23,6 +35,7 @@ router.post('/', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 // Get all articles (max 40)
 router.get('/', async (req, res) => {

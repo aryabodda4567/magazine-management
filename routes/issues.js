@@ -13,9 +13,15 @@ router.post('/', async (req, res) => {
     const { magazine_id, issue_number, publication_date, cover_image_url, status } = req.body;
 
     try {
+        // Validate magazine_id exists
+        const [magazineCheck] = await pool.query('SELECT * FROM magazines WHERE magazine_id = ?', [magazine_id]);
+        if (magazineCheck.length === 0) {
+            return res.status(400).send('Magazine not found');
+        }
+
         const [result] = await pool.query(
-            'INSERT INTO issues (magazine_id, issue_number, publication_date, cover_image_url, status) VALUES (?, ?, ?, ?, ?)',
-            [magazine_id, issue_number, publication_date, cover_image_url, status || 'draft']
+            'INSERT INTO issues (magazine_id, issue_number, publication_date, cover_image_url, status) VALUES (?, ?, ?, ?, ?)', 
+            [magazine_id, issue_number, publication_date, cover_image_url, status]
         );
         res.status(201).json({ message: 'Issue created successfully', issue_id: result.insertId });
     } catch (error) {
@@ -23,6 +29,7 @@ router.post('/', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 // Get all issues (max 40)
 router.get('/', async (req, res) => {

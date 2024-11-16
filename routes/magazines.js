@@ -16,13 +16,17 @@ router.post('/', async (req, res) => {
     const { title, description, price, publication_frequency } = req.body;
 
     try {
-        const [result] = await pool.query('INSERT INTO magazines (title, description, price, publication_frequency) VALUES (?, ?, ?, ?)', [title, description, price, publication_frequency]);
+        const [result] = await pool.query(
+            'INSERT INTO magazines (title, description, price, publication_frequency) VALUES (?, ?, ?, ?)', 
+            [title, description, price, publication_frequency]
+        );
         res.status(201).json({ message: 'Magazine created successfully', magazine_id: result.insertId });
     } catch (error) {
         console.error('Error creating magazine:', error);
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 // Get all magazines (max 40)
 router.get('/', async (req, res) => {
