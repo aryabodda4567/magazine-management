@@ -10,8 +10,7 @@ const userRouter = require("./routes/users"); // Import the users module
 const issueRouter = require("./routes/issues"); // Import the issues module
 const subscriptionRouter = require("./routes/subscriptions"); // Import the issues module
 const loginRouter = require("./routes/login");// Import the login module
-const { console } = require('inspector');
-const { error } = require('console');
+ 
 
 
 
